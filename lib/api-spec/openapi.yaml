@@ -1,0 +1,469 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Trademark Status Monitoring and Priority Management System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: trademarks
+    description: Trademark application operations
+  - name: dashboard
+    description: Dashboard summary operations
+  - name: reports
+    description: Reporting operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /trademarks:
+    get:
+      operationId: listTrademarks
+      tags: [trademarks]
+      summary: List all trademark applications
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of trademark applications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrademarkListResponse"
+    post:
+      operationId: createTrademark
+      tags: [trademarks]
+      summary: Add a new trademark application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrademarkInput"
+      responses:
+        "201":
+          description: Created trademark application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trademark"
+
+  /trademarks/{id}:
+    get:
+      operationId: getTrademark
+      tags: [trademarks]
+      summary: Get a trademark application by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trademark application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trademark"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateTrademark
+      tags: [trademarks]
+      summary: Update a trademark application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrademarkUpdate"
+      responses:
+        "200":
+          description: Updated trademark application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trademark"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteTrademark
+      tags: [trademarks]
+      summary: Delete a trademark application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted successfully
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trademarks/bulk:
+    post:
+      operationId: bulkImportTrademarks
+      tags: [trademarks]
+      summary: Bulk import trademark applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkImportInput"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkImportResult"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary counts
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/status-breakdown:
+    get:
+      operationId: getStatusBreakdown
+      tags: [dashboard]
+      summary: Get application counts grouped by status
+      responses:
+        "200":
+          description: Status breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusCount"
+
+  /dashboard/priority-breakdown:
+    get:
+      operationId: getPriorityBreakdown
+      tags: [dashboard]
+      summary: Get application counts grouped by priority
+      responses:
+        "200":
+          description: Priority breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PriorityCount"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recently updated trademark applications
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trademark"
+
+  /reports/export:
+    get:
+      operationId: exportReport
+      tags: [reports]
+      summary: Export trademark data as CSV/JSON for download
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+        - name: priority
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Export data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Trademark:
+      type: object
+      required:
+        - id
+        - applicationNumber
+        - trademarkName
+        - currentStatus
+        - priorityLevel
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        applicationNumber:
+          type: string
+        trademarkName:
+          type: string
+        clientName:
+          type: ["string", "null"]
+        currentStatus:
+          type: string
+        priorityLevel:
+          type: string
+          enum: [high, medium, low]
+        recommendedAction:
+          type: ["string", "null"]
+        lastUpdatedDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrademarkInput:
+      type: object
+      required:
+        - applicationNumber
+        - trademarkName
+        - currentStatus
+      properties:
+        applicationNumber:
+          type: string
+        trademarkName:
+          type: string
+        clientName:
+          type: string
+        currentStatus:
+          type: string
+        lastUpdatedDate:
+          type: string
+        notes:
+          type: string
+
+    TrademarkUpdate:
+      type: object
+      properties:
+        applicationNumber:
+          type: string
+        trademarkName:
+          type: string
+        clientName:
+          type: string
+        currentStatus:
+          type: string
+        lastUpdatedDate:
+          type: string
+        notes:
+          type: string
+
+    TrademarkListResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trademark"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    BulkImportInput:
+      type: object
+      required:
+        - applications
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrademarkInput"
+
+    BulkImportResult:
+      type: object
+      required:
+        - imported
+        - failed
+        - total
+      properties:
+        imported:
+          type: integer
+        failed:
+          type: integer
+        total:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+
+    DashboardSummary:
+      type: object
+      required:
+        - total
+        - examinationCases
+        - hearingCases
+        - opposedCases
+        - registeredCases
+        - otherCases
+        - highPriority
+        - mediumPriority
+        - lowPriority
+        - closed
+      properties:
+        total:
+          type: integer
+        examinationCases:
+          type: integer
+        hearingCases:
+          type: integer
+        opposedCases:
+          type: integer
+        registeredCases:
+          type: integer
+        otherCases:
+          type: integer
+        highPriority:
+          type: integer
+        mediumPriority:
+          type: integer
+        lowPriority:
+          type: integer
+        closed:
+          type: integer
+
+    StatusCount:
+      type: object
+      required:
+        - status
+        - count
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+
+    PriorityCount:
+      type: object
+      required:
+        - priority
+        - count
+      properties:
+        priority:
+          type: string
+        count:
+          type: integer
+
+    ExportData:
+      type: object
+      required:
+        - data
+        - generatedAt
+        - total
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trademark"
+        generatedAt:
+          type: string
+        total:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string

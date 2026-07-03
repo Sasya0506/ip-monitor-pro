@@ -1,0 +1,11 @@
+{
+  "name": "ip-monitor-pro",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build:api": "cd artifacts/api-server && pnpm install && pnpm build",
+    "build:app": "cd artifacts/trademark-app && pnpm install && pnpm build",
+    "start:api": "cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
